@@ -4,7 +4,7 @@ from tkinter import filedialog, messagebox
 
 
 #----------------------------------------------------
-#credit and thanks to squareRoot17 from https://stackoverflow.com/questions/20399243/display-message-when-hovering-over-something-with-mouse-cursor-in-python for the code sample.
+#credit and thanks to squareRoot17 from https://stackoverflow.com/questions/20399243/display-message-when-hovering-over-something-with-mouse-cursor-in-python for the code sample of this class.
 class ToolTip(object):
 
     def __init__(self, widget):
@@ -52,16 +52,24 @@ def fileButtonClicked():
     fileLocation.insert(0, fileButtonLocation)
 
 def nameboxAppear():
-    global nameBox, nameUrlCheckBox
+    global nameBox, nameUrlCheckBox, dateBox
     if name_state.get():
         nameUrlCheckBox = Checkbutton(windowMain, text = "Include URL?", variable = hyperlink_state)
         nameUrlCheckBox.grid(column = 1, row = 2, sticky = "w")
         createToolTip(nameUrlCheckBox, text = "To include URL data in the\nvideo title, select this.")
         nameBox = Entry(windowMain, width = 40, textvariable = name_data)
         nameBox.grid(column = 2, row = 2, columnspan = 6, sticky = "w")
+        createToolTip(nameBox, text = "Leave blank for default name, but\nwith the checkbox options applied.")
+        dateBox = Checkbutton(windowMain, text = "Date first?", variable = date_state)
+        dateBox.grid(column = 1, row = 3, sticky = "w")
+        createToolTip(dateBox, text = "Add the upload date in front of the title.")
     else:
         nameUrlCheckBox.grid_forget()
         nameBox.grid_forget()
+        dateBox.grid_forget()
+        hyperlink_state.set(0)
+        name_data.set("")
+        date_state.set(0)
 
 def browserAppear():
     global radioBrave, radioChrome, radioChromium, radioEdge, radioFirefox, radioOpera, radioSafari, radioVivaldi
@@ -111,6 +119,7 @@ def userListAppear():
         ulLocate.grid_forget()
         userFileButton.grid_forget()
 
+
 def userListButton():
     userButtonLocation = filedialog.askopenfilename()
     ulLocate.delete(0, "end")
@@ -122,30 +131,43 @@ def dlBegin():
     if len(url_state.get()) == 0 and usrlist_state.get() == 0:
         messagebox.showwarning("Warning", "The URL field is empty!")
         return "error-URL"
-    if len(dl_state.get()) == 0:
+    if len(dl_data.get()) == 0:
         messagebox.showwarning("Warning", "The destination field is empty!")
         return "error-destination"
-    if name_state.get() == 1 and len(name_data.get()) == 0:
-        messagebox.showwarning("Warning", "The Custom Name field is empty!\nPlease uncheck it or enter a name.")
+    if name_state.get() and ( len(name_data.get()) == 0 and not hyperlink_state.get() and not date_state.get() ):
+        messagebox.showwarning("Warning", "The Custom Name field is empty and no additional settings are selected!\nPlease uncheck it, check a name option, or enter a name.")
         return "error-name"
-    if usrlist_state.get() == 1 and len(usrlist_data.get()) == 0:
+    if usrlist_state.get() and len(usrlist_data.get()) == 0:
         messagebox.showwarning("Warning", "The DL List field is empty!\nPlease uncheck it or enter a file location.")
     
-    if name_state.get() and not hyperlink_state.get():
-        dir_location = str(dl_state.get())
-        dir_location += "/" + str(name_data.get()) + ".%(ext)s"
-        cmd_list.append("-o")
-        cmd_list.append(str(dir_location))
-    elif name_state.get() and hyperlink_state.get():
-        dir_location = str(dl_state.get())
-        dir_location += "/" + str(name_data.get()) + " [%(id)s].%(ext)s"
-        cmd_list.append("-o")
-        cmd_list.append(str(dir_location))
+
+    if name_state.get() and len(name_data.get()) > 0:
+        dir_location = str(dl_data.get())
+        if hyperlink_state.get() and not date_state.get():
+            #Custom Name [hyperlink].[extension]
+            dir_location += "/" + str(name_data.get()) + " [%(id)s].%(ext)s"
+        elif date_state.get() and not hyperlink_state.get():
+            #[date] Custom Name.[extension]
+            dir_location += "/%(upload_date)s " + str(name_data.get()) + ".%(ext)s"
+        elif hyperlink_state.get() and date_state.get():
+            #[date] Custom Name [hyperlink].[extension]
+            dir_location += "/%(upload_date)s " + str(name_data.get()) + " [%(id)s].%(ext)s"
+    elif name_state.get() and len(name_data.get()) == 0:
+        dir_location = str(dl_data.get())
+        if hyperlink_state.get() and not date_state.get():
+            #[Default Name] [hyperlink].[extension]
+            dir_location += "/%(title)s [%(id)s].%(ext)s"
+        elif date_state.get() and not hyperlink_state.get():
+            #[date] [Default Name].[extension]
+            dir_location += "/%(upload_date)s %(title)s.%(ext)s"
+        elif hyperlink_state.get() and date_state.get():
+            #[date] [Default Name] [hyperlink].[extension]
+             dir_location += "/%(upload_date)s %(title)s [%(id)s].%(ext)s"
     else:
-        dir_location = str(dl_state.get())
+        dir_location = str(dl_data.get())
         dir_location += "/%(title)s [%(id)s].%(ext)s"
-        cmd_list.append("-o")
-        cmd_list.append(str(dir_location))
+    cmd_list.append("-o")
+    cmd_list.append(str(dir_location))
     
     if cookie_state.get():
         cmd_list.append("--cookies-from-browser")
@@ -207,9 +229,10 @@ windowMain.geometry("500x500")
 windowMain.iconbitmap("gui-dlp.ico")
 
 url_state = StringVar(windowMain, "")
-dl_state = StringVar(windowMain, "")
+dl_data = StringVar(windowMain, "")
 name_state = IntVar(windowMain, 0)
 name_data = StringVar(windowMain, "")
+date_state = IntVar(windowMain, 0)
 hyperlink_state = IntVar(windowMain, 0)
 cookie_state = IntVar(windowMain, 0)
 browser_state = StringVar(windowMain, "brave")
@@ -235,7 +258,7 @@ createToolTip(mediaSource, text = "Enter the URL of the Youtube video, Twitch\ns
 mediaSourceText = Label(windowMain, text = "URL for media source")
 mediaSourceText.grid(column = 4, row = 0)
 
-fileLocation = Entry(windowMain, width = 60, textvariable = dl_state)
+fileLocation = Entry(windowMain, width = 60, textvariable = dl_data)
 fileLocation.grid(padx = 5, pady = 10, columnspan = 4)
 createToolTip(fileLocation, text = "Enter the absolute path\nto where you want the\nvideo to be downloaded to\n(or use the 'Destination' button).")
 
@@ -288,12 +311,4 @@ showTerm = Checkbutton(text = "Hide terminal?", variable = term_state)
 showTerm.grid(column = 1, row = 20, sticky = "w")
 createToolTip(showTerm, text = "Select this to hide the process run\nin a terminal, such as CMD. Otherwise,\nit will be shown.")
 
-
 windowMain.mainloop()
-
-#CHECK THAT NAME (if selected), DESTINATION, AND SOURCE AREN'T EMPTY
-#print("yt-dlp Interface\nInput 'h' for help")
-
-#startDownload(variables)
-
-#have background download (no cmd box), or option for popup box which runs code in an external .bat file.
