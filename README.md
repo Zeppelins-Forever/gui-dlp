@@ -15,12 +15,13 @@ technically specific options.
 Only supported on Windows at the moment. 
 You can run it as a python script just fine, or if you want to 
 convert this into an executable, I would recommend the tool 
-auto-py-to-exe. (https://pypi.org/project/auto-py-to-exe/).
+auto-py-to-exe (https://pypi.org/project/auto-py-to-exe/), or just
+use one of my releases.
 
 --------------------------------------------------------------------
 
 Python-based GUI for yt-dlp. Windows only.
 
 This is by no means "clean" code, and I am by no means an expert, 
-so don't expect this to be highly optimized. 
+so don't expect this to be highly optimized.
 To quote some guy, "I have no idea what I'm doing." 
