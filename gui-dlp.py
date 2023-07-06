@@ -108,6 +108,16 @@ def waitAppear():
     else:
         numBox.grid_forget()
 
+def thumbnailFormat():
+    global ThumbFormatOptions
+    OPTIONS = ["webp", "png", "jpg"]
+    if thumbwrite_state.get():
+        ThumbFormatOptions = OptionMenu(windowMain, thumbwrite_format_data, *OPTIONS)
+        ThumbFormatOptions.grid(column = 3, row = 7, sticky = "w")
+        createToolTip(ThumbFormatOptions, text = "Select format to download video as.")
+    else:
+        ThumbFormatOptions.grid_forget()
+
 def userListAppear():
     global ulLocate, userFileButton
     if usrlist_state.get():
@@ -203,6 +213,8 @@ def dlBegin():
 
     if thumbwrite_state.get():
         cmd_list.append("--write-thumbnail")
+        cmd_list.append("--convert-thumbnails")
+        cmd_list.append(str(thumbwrite_format_data.get()))
 
     if thumbembed_state.get():
         cmd_list.append("--embed-thumbnail")
@@ -215,6 +227,11 @@ def dlBegin():
         cmd_list.append(usrlist_data.get())
     else:
         cmd_list.append(url_state.get())
+    
+    if subtitle_state.get():
+        cmd_list.append("--all-subs")
+    if subtitle_embed_state.get():
+        cmd_list.append("--embed-subs")
 
     if term_state.get():
         downloading = subprocess.Popen(cmd_list, shell=True)
@@ -225,11 +242,13 @@ def dlBegin():
 
 
 
-
 windowMain = Tk()
 windowMain.title("yt-dlp Manger")
 windowMain.geometry("500x500")
-windowMain.iconbitmap("gui-dlp.ico")
+try:
+    windowMain.iconbitmap("gui-dlp.ico")
+except Exception:
+    pass
 
 url_state = StringVar(windowMain, "")
 dl_data = StringVar(windowMain, "")
@@ -244,12 +263,15 @@ comments_state = IntVar(windowMain, 0)
 wait_state = IntVar(windowMain, 0)
 wait_num = IntVar(windowMain, 15)
 thumbwrite_state = IntVar(windowMain, 0)
+thumbwrite_format_data = StringVar(windowMain, "webm")
 thumbembed_state = IntVar(windowMain, 0)
 audio_state = IntVar(windowMain, 0)
 
 usrlist_state = IntVar(windowMain, 0)
 usrlist_data = StringVar(windowMain, "")
 
+subtitle_state = IntVar(windowMain, 0)
+subtitle_embed_state = IntVar(windowMain, 0)
 term_state = IntVar(windowMain, 0)
 
 
@@ -271,39 +293,49 @@ createToolTip(fileButton, text = "Enter the absolute path\nto where you want the
 
 customNameCheck = Checkbutton(text = "Custom name?", variable = name_state, command = nameboxAppear)
 customNameCheck.grid(column = 0, row = 2, sticky = "w")
-createToolTip(customNameCheck, "Check this if you want to set a custom name for the\ndownloaded file. DO NOT INCLUDE FILE EXTENSION!\n If you are downloading a playlist, check 'Include URL?',\notherwise the videos will overwrite themselves.")
+createToolTip(customNameCheck, "Set a custom name for the downloaded file.\nDO NOT INCLUDE FILE EXTENSION!\n If you are downloading a playlist, check 'Include URL?',\notherwise the videos will overwrite themselves.")
 
 cookiesCheck = Checkbutton(text = "Use cookies?", variable = cookie_state, command = browserAppear)
 cookiesCheck.grid(column = 0, row = 3, sticky = "w")
-createToolTip(cookiesCheck, text = "Select this to import cookies from\nyour browser of choice. May\nbe needed for paywalled content.")
+createToolTip(cookiesCheck, text = "Import cookies from your browser of choice.\nMay be needed for paywalled content.")
 
 descriptionCheck = Checkbutton(text = "Download description?", variable = description_state)
 descriptionCheck.grid(column = 0, row = 4, sticky = "w")
-createToolTip(descriptionCheck, text = "Select this to write the video\ndescription to a seperate file.")
+createToolTip(descriptionCheck, text = "Write the video description to a seperate file.")
 
 commentsCheck = Checkbutton(text = "Download comments?", variable = comments_state)
 commentsCheck.grid(column = 0, row = 5, sticky = "w")
-createToolTip(commentsCheck, text = "Select this to download stream comments\nto a seperate infojson file.")
+createToolTip(commentsCheck, text = "Download stream comments to a seperate infojson file.")
 
 waitCheck = Checkbutton(text = "Wait for video?", variable = wait_state, command = waitAppear)
 waitCheck.grid(column = 0, row = 6, sticky = "w")
 createToolTip(waitCheck, text = "If the video is scheduled but\nnot started yet, use this to retry\nplaying the video after the selected\nnumber of seconds.")
 
-writeThumbnail = Checkbutton(text = "Write thumbnail?", variable = thumbwrite_state)
+writeThumbnail = Checkbutton(text = "Write thumbnail?", variable = thumbwrite_state, command = thumbnailFormat)
 writeThumbnail.grid(column = 0, row = 7, sticky = "w")
-createToolTip(writeThumbnail, text = "Select this to download the\nthumbnail as a separate\nimage file.")
+createToolTip(writeThumbnail, text = "Download the thumbnail as\na separate image file.") #####################
+
+
 
 embedThumbnail = Checkbutton(text = "Embed?", variable = thumbembed_state)
 embedThumbnail.grid(column = 1, row = 7, sticky = "w")
-createToolTip(embedThumbnail, text = "Select this to embed the\nthumbnail as the downloaded\nvideo's thumbnail.")
+createToolTip(embedThumbnail, text = "Embed the thumbnail as the\ndownloaded video's thumbnail.")
 
 audioOnly = Checkbutton(text = "Audio only?", variable = audio_state)
 audioOnly.grid(column = 0, row = 8, sticky = "w")
-createToolTip(audioOnly, text = "Select this if you only wish to\ndownload the source's audio.")
+createToolTip(audioOnly, text = "Only download the source's audio.")
 
 downloadList = Checkbutton(text = "DL List?", variable = usrlist_state, command = userListAppear)
 downloadList.grid(column = 0, row = 9, sticky = "w")
 createToolTip(downloadList, text = "If you have a list of URLs to download\n(separated by a new line in a text doc),\nuse this to download videos from that\ndocument's data. This takes priority\nover the URL field.")
+
+downloadSubs = Checkbutton(text = "Subtitles?", variable = subtitle_state)
+downloadSubs.grid(column = 0, row = 10, sticky = "w")
+createToolTip(downloadSubs, text = "Download all available subtitle options for a video.")
+
+embedSubs = Checkbutton(text = "Embed?", variable = subtitle_embed_state)
+embedSubs.grid(column = 1, row = 10, sticky = "w")
+createToolTip(embedSubs, text = "Embed all available subtitle options for a video.")
 
 windowMain.rowconfigure(19, weight = 1)
 
@@ -312,6 +344,6 @@ dlButton.grid(column = 0, row = 20, sticky = "w")
 
 showTerm = Checkbutton(text = "Hide terminal?", variable = term_state)
 showTerm.grid(column = 1, row = 20, sticky = "w")
-createToolTip(showTerm, text = "Select this to hide the process run\nin a terminal, such as CMD. Otherwise,\nit will be shown.")
+createToolTip(showTerm, text = "Hide the process running\nin a terminal, such as CMD. Otherwise,\nit will be shown.")
 
 windowMain.mainloop()
