@@ -12,15 +12,18 @@ This presently does not have all of the features available in the
 terminal, so I wouldn't recommend using it if you need more 
 technically specific options.
 
-Only supported on Windows at the moment. 
 You can run it as a python script just fine, or if you want to 
-convert this into an executable, I would recommend the tool 
+convert this into a Windows executable, I would recommend the tool 
 auto-py-to-exe (https://pypi.org/project/auto-py-to-exe/), or just
 use one of my releases.
 
---------------------------------------------------------------------
+It runs in both Windows and Linux (macOS as of yet untested).
+For Linux users, you may have to install "Tk" (Tkinter module for Python)
+before running the python3 script. A couple of features do not work
+exactly as intended in Linux (terminal window not showing with download
+progress), but core functionality still operates smoothly.
 
-Python-based GUI for yt-dlp. Windows only.
+--------------------------------------------------------------------
 
 This is by no means "clean" code, and I am by no means an expert, 
 so don't expect this to be highly optimized.
