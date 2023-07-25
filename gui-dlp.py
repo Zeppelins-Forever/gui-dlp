@@ -1,4 +1,4 @@
-import os, sys, subprocess
+import os, sys, subprocess, webbrowser
 from tkinter import *
 from tkinter import filedialog, messagebox
 
@@ -135,6 +135,8 @@ def userListButton():
     ulLocate.delete(0, "end")
     ulLocate.insert(0, userButtonLocation)
 
+def checkGitHub():  
+    webbrowser.open("https://github.com/Zeppelins-Forever/gui-dlp/releases", new=0, autoraise=True)
 
 def dlBegin():
     cmd_list = ["yt-dlp"]
@@ -149,8 +151,6 @@ def dlBegin():
         return "error-name"
     if usrlist_state.get() and len(usrlist_data.get()) == 0:
         messagebox.showwarning("Warning", "The DL List field is empty!\nPlease uncheck it or enter a file location.")
-    
-
     if name_state.get() and len(name_data.get()) > 0:
         dir_location = str(dl_data.get())
         if hyperlink_state.get() and not date_state.get():
@@ -233,6 +233,10 @@ def dlBegin():
     if subtitle_embed_state.get():
         cmd_list.append("--embed-subs")
 
+    if allformats_state.get():
+        cmd_list.append("-f")
+        cmd_list.append("all")
+
     if term_state.get():
         downloading = subprocess.Popen(cmd_list, shell=True)
         messagebox.showinfo("Download Status", "Download Starting")
@@ -243,8 +247,8 @@ def dlBegin():
 
 
 windowMain = Tk()
-windowMain.title("yt-dlp Manger")
-windowMain.geometry("500x500")
+windowMain.title("GUI-DLP v1.0.4")
+windowMain.geometry("510x500")
 try:
     windowMain.iconbitmap("gui-dlp.ico")
 except Exception:
@@ -272,6 +276,7 @@ usrlist_data = StringVar(windowMain, "")
 
 subtitle_state = IntVar(windowMain, 0)
 subtitle_embed_state = IntVar(windowMain, 0)
+allformats_state = IntVar(windowMain, 0)
 term_state = IntVar(windowMain, 0)
 
 
@@ -291,37 +296,35 @@ fileButton = Button(windowMain, text = "     Destination     ", fg = "blue", com
 fileButton.grid(column = 4, row = 1)
 createToolTip(fileButton, text = "Enter the absolute path\nto where you want the\nvideo to be downloaded to\n(or use the 'Destination' button).")
 
-customNameCheck = Checkbutton(text = "Custom name?", variable = name_state, command = nameboxAppear)
+customNameCheck = Checkbutton(text = "Custom Name?", variable = name_state, command = nameboxAppear)
 customNameCheck.grid(column = 0, row = 2, sticky = "w")
 createToolTip(customNameCheck, "Set a custom name for the downloaded file.\nDO NOT INCLUDE FILE EXTENSION!\n If you are downloading a playlist, check 'Include URL?',\notherwise the videos will overwrite themselves.")
 
-cookiesCheck = Checkbutton(text = "Use cookies?", variable = cookie_state, command = browserAppear)
+cookiesCheck = Checkbutton(text = "Use Cookies?", variable = cookie_state, command = browserAppear)
 cookiesCheck.grid(column = 0, row = 3, sticky = "w")
 createToolTip(cookiesCheck, text = "Import cookies from your browser of choice.\nMay be needed for paywalled content.")
 
-descriptionCheck = Checkbutton(text = "Download description?", variable = description_state)
+descriptionCheck = Checkbutton(text = "Download Description?", variable = description_state)
 descriptionCheck.grid(column = 0, row = 4, sticky = "w")
 createToolTip(descriptionCheck, text = "Write the video description to a seperate file.")
 
-commentsCheck = Checkbutton(text = "Download comments?", variable = comments_state)
+commentsCheck = Checkbutton(text = "Download Comments?", variable = comments_state)
 commentsCheck.grid(column = 0, row = 5, sticky = "w")
 createToolTip(commentsCheck, text = "Download stream comments to a seperate infojson file.")
 
-waitCheck = Checkbutton(text = "Wait for video?", variable = wait_state, command = waitAppear)
+waitCheck = Checkbutton(text = "Wait for Video?", variable = wait_state, command = waitAppear)
 waitCheck.grid(column = 0, row = 6, sticky = "w")
 createToolTip(waitCheck, text = "If the video is scheduled but\nnot started yet, use this to retry\nplaying the video after the selected\nnumber of seconds.")
 
-writeThumbnail = Checkbutton(text = "Write thumbnail?", variable = thumbwrite_state, command = thumbnailFormat)
+writeThumbnail = Checkbutton(text = "Write Thumbnail?", variable = thumbwrite_state, command = thumbnailFormat)
 writeThumbnail.grid(column = 0, row = 7, sticky = "w")
-createToolTip(writeThumbnail, text = "Download the thumbnail as\na separate image file.") #####################
-
-
+createToolTip(writeThumbnail, text = "Download the thumbnail as\na separate image file.") \
 
 embedThumbnail = Checkbutton(text = "Embed?", variable = thumbembed_state)
 embedThumbnail.grid(column = 1, row = 7, sticky = "w")
 createToolTip(embedThumbnail, text = "Embed the thumbnail as the\ndownloaded video's thumbnail.")
 
-audioOnly = Checkbutton(text = "Audio only?", variable = audio_state)
+audioOnly = Checkbutton(text = "Audio Only?", variable = audio_state)
 audioOnly.grid(column = 0, row = 8, sticky = "w")
 createToolTip(audioOnly, text = "Only download the source's audio.")
 
@@ -332,6 +335,10 @@ createToolTip(downloadList, text = "If you have a list of URLs to download\n(sep
 downloadSubs = Checkbutton(text = "Subtitles?", variable = subtitle_state)
 downloadSubs.grid(column = 0, row = 10, sticky = "w")
 createToolTip(downloadSubs, text = "Download all available subtitle options for a video.")
+
+downloadAllFormats = Checkbutton(text = "All Formats?", variable = allformats_state)
+downloadAllFormats.grid(column = 0, row = 11, sticky = "w")
+createToolTip(downloadAllFormats, text = "Download all file types available.")
 
 embedSubs = Checkbutton(text = "Embed?", variable = subtitle_embed_state)
 embedSubs.grid(column = 1, row = 10, sticky = "w")
@@ -344,6 +351,10 @@ dlButton.grid(column = 0, row = 20, sticky = "w")
 
 showTerm = Checkbutton(text = "Hide terminal?", variable = term_state)
 showTerm.grid(column = 1, row = 20, sticky = "w")
-createToolTip(showTerm, text = "Hide the process running\nin a terminal, such as CMD. Otherwise,\nit will be shown.")
+createToolTip(showTerm, text = "The process typically opens a\nterminal to display progress.\nSelect this to prevent it.")
+
+updateButton = Button(text = "Update?", command = checkGitHub)
+updateButton.grid(column = 4, row = 20, sticky = "e")
+createToolTip(updateButton, text = "Open the GitHub Releases\npage to manually check\nfor updates.")
 
 windowMain.mainloop()
