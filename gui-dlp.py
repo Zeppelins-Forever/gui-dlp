@@ -1,7 +1,6 @@
-import os, sys, subprocess, webbrowser
+import os, sys, subprocess, webbrowser, time, threading, base64
 from tkinter import *
 from tkinter import filedialog, messagebox
-
 
 #----------------------------------------------------
 #credit and thanks to squareRoot17 from https://stackoverflow.com/questions/20399243/display-message-when-hovering-over-something-with-mouse-cursor-in-python for the code sample of this class.
@@ -113,8 +112,8 @@ def thumbnailFormat():
     OPTIONS = ["webp", "png", "jpg"]
     if thumbwrite_state.get():
         ThumbFormatOptions = OptionMenu(windowMain, thumbwrite_format_data, *OPTIONS)
-        ThumbFormatOptions.grid(column = 3, row = 7, sticky = "w")
-        createToolTip(ThumbFormatOptions, text = "Select format to download video as.")
+        ThumbFormatOptions.grid(column = 3, row = 7)
+        createToolTip(ThumbFormatOptions, text = "Select format to download thumbnail as.")
     else:
         ThumbFormatOptions.grid_forget()
 
@@ -135,12 +134,62 @@ def userListButton():
     ulLocate.delete(0, "end")
     ulLocate.insert(0, userButtonLocation)
 
-def checkGitHub():  
-    webbrowser.open("https://github.com/Zeppelins-Forever/gui-dlp/releases", new=0, autoraise=True)
+def temp_textYin(e):
+    dateEnterY.delete(0,"end")
+def temp_textYout(e):
+    if mm_year_data.get() == "":
+        dateEnterY.insert(0,"YYYY")
+def temp_textMin(e):
+    dateEnterM.delete(0,"end")
+def temp_textMout(e):
+    if mm_month_data.get() == "":
+        dateEnterM.insert(0,"MM")
+def temp_textDin(e):
+    dateEnterD.delete(0,"end")
+def temp_textDout(e):
+    if mm_day_data.get() == "":
+        dateEnterD.insert(0,"DD")
 
-def dlBegin():
-    cmd_list = ["yt-dlp"]
-    if len(url_state.get()) == 0 and usrlist_state.get() == 0:
+def monitorTimeRange():
+    global dateEnterY, dateEnterM, dateEnterD, text_1
+    if monitor_mode_state.get():
+        text_1 = Label(windowMain, text="Start Date")
+        text_1.place(x=270, y=410)
+        dateEnterY = Entry(windowMain, width = 5, textvariable = mm_year_data)
+        dateEnterY.insert(0, "YYYY")
+        dateEnterY.place(x = 250, y = 430)
+        dateEnterY.bind("<FocusIn>", temp_textYin)
+        dateEnterY.bind("<FocusOut>", temp_textYout)
+        dateEnterM = Entry(windowMain, width = 4, textvariable = mm_month_data)
+        dateEnterM.insert(0, "MM")
+        dateEnterM.place(x = 285, y = 430)
+        dateEnterM.bind("<FocusIn>", temp_textMin)
+        dateEnterM.bind("<FocusOut>", temp_textMout)
+        dateEnterD = Entry(windowMain, width = 4, textvariable = mm_day_data)
+        dateEnterD.insert(0, "DD")
+        dateEnterD.place(x = 314, y = 430)
+        dateEnterD.bind("<FocusIn>", temp_textDin)
+        dateEnterD.bind("<FocusOut>", temp_textDout)
+    else:
+        text_1.destroy()
+        dateEnterY.place_forget()
+        dateEnterY.delete(0,"end")
+        dateEnterM.place_forget()
+        dateEnterM.delete(0,"end")
+        dateEnterD.place_forget()
+        dateEnterD.delete(0,"end")
+
+
+
+def checkGitHub():  
+    webbrowser.open("https://github.com/Zeppelins-Forever/gui-dlp/releases", new = 0, autoraise = True)
+
+def helpMenu():
+    webbrowser.open("https://github.com/Zeppelins-Forever/gui-dlp/", new = 0, autoraise = True)
+        
+
+def errorCheck():
+    if len(url_data.get()) == 0 and usrlist_state.get() == 0:
         messagebox.showwarning("Warning", "The URL field is empty!")
         return "error-URL"
     if len(dl_data.get()) == 0:
@@ -151,6 +200,30 @@ def dlBegin():
         return "error-name"
     if usrlist_state.get() and len(usrlist_data.get()) == 0:
         messagebox.showwarning("Warning", "The DL List field is empty!\nPlease uncheck it or enter a file location.")
+        return "error-no-DL-list"
+    if monitor_mode_state.get():
+        if not mm_year_data.get().isdigit() or not mm_month_data.get().isdigit() or not mm_day_data.get().isdigit():
+            messagebox.showwarning("Warning", "Invalid characters in the date box.\nPlease use only numbers.")
+            return "error-letters-in-date-box"
+        if len(mm_year_data.get().replace(" ", "")) != 4 or len(mm_month_data.get().replace(" ", "")) != 2 or len(mm_day_data.get().replace(" ", "")) != 2:
+            messagebox.showwarning("Warning", "Improper date format.\nPlease enter dates in YYYY MM DD format.\nEx. 2023 06 16")
+            return "error-improper-date-format"
+        dlBegin(1)
+    else:
+        dlBegin(0)
+
+def monButtonStop(): 
+    global stopMonitoring
+    stopMonitoring = 1
+    print("Stop Button Pressed, stopMonitoring =", stopMonitoring)
+
+def dlBegin(monitor_mode):
+    global downloading, shell_used, cmd_list
+    cmd_list = ["yt-dlp"]
+    if monitor_mode == 1:
+        full_date = mm_year_data.get() + mm_month_data.get() + mm_day_data.get()
+        cmd_list.append("--dateafter")
+        cmd_list.append(full_date)
     if name_state.get() and len(name_data.get()) > 0:
         dir_location = str(dl_data.get())
         if hyperlink_state.get() and not date_state.get():
@@ -226,7 +299,7 @@ def dlBegin():
         cmd_list.append("-a")
         cmd_list.append(usrlist_data.get())
     else:
-        cmd_list.append(url_state.get())
+        cmd_list.append(url_data.get())
     
     if subtitle_state.get():
         cmd_list.append("--all-subs")
@@ -237,24 +310,74 @@ def dlBegin():
         cmd_list.append("-f")
         cmd_list.append("all")
 
+    if monitor_mode_state.get():
+        global stopMonitorButton
+        dlButton.grid_forget()
+        stopMonitorButton = Button(text = "Stop Monitoring", command = monButtonStop)
+        stopMonitorButton.grid(column = 0, row = 20, pady = 5, sticky = "w")
+        createToolTip(stopMonitorButton, text = "Finish current monitor cycle and\nend monitor mode. If you wish\nto download other videos while in\nmonitor mode, please launch\nanother instance of this program.")
+        launchMonitorThread = threading.Thread(target = monitorThread, args = [cmd_list]) #launch new thread so download monitoring doesnt interfere with window processing.
+        launchMonitorThread.start()
+        return 0 
+
     if term_state.get():
         downloading = subprocess.Popen(cmd_list, shell=True)
         messagebox.showinfo("Download Status", "Download Starting")
-
+        shell_used = True
     else:
         downloading = subprocess.Popen(cmd_list, shell=False)
+        shell_used = False
 
+def monitorThread(cmd_commands):
+    global dlButton, stopMonitoring
+    print("\n", cmd_commands, "\n")
+    if term_state.get():
+        downloading = subprocess.Popen(cmd_list, shell=True)
+    else:
+        downloading = subprocess.Popen(cmd_list, shell=False)
+    while not stopMonitoring:
+        if downloading.poll() == None:
+            print("Process is running!")
+            if stopMonitoring == 0:
+                time.sleep(3)
+            continue
+        else:
+            print("Restarting process.")
+            if term_state.get():
+                downloading = subprocess.Popen(cmd_list, shell=True)
+            else:
+                downloading = subprocess.Popen(cmd_list, shell=False)
+    print("Stopped Monitoring")
+    downloading.kill()
+    stopMonitorButton.destroy()
+    dlButton = Button(windowMain, text = "     Begin Download     ", fg = "dark green", background = "light gray", command = errorCheck)
+    dlButton.grid(column = 0, row = 20, sticky = "w")
+    stopMonitoring = 0
+    return
+
+def windowIcon(windowName):
+    icon = """ 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
+    """
+    icondata= base64.b64decode(icon)
+    ## The temp file is icon.ico
+    tempFile= "icon.ico"
+    iconfile= open(tempFile,"wb")
+    ## Extract the icon
+    iconfile.write(icondata)
+    iconfile.close()
+    windowName.wm_iconbitmap(tempFile)
+    ## Delete the tempfile
+    os.remove(tempFile)
 
 
 windowMain = Tk()
 windowMain.title("GUI-DLP v1.0.4")
 windowMain.geometry("510x500")
-try:
-    windowMain.iconbitmap("gui-dlp.ico")
-except Exception:
-    pass
+windowMain.resizable(False, False)
+windowIcon(windowMain)
 
-url_state = StringVar(windowMain, "")
+
+url_data = StringVar(windowMain, "")
 dl_data = StringVar(windowMain, "")
 name_state = IntVar(windowMain, 0)
 name_data = StringVar(windowMain, "")
@@ -267,7 +390,7 @@ comments_state = IntVar(windowMain, 0)
 wait_state = IntVar(windowMain, 0)
 wait_num = IntVar(windowMain, 15)
 thumbwrite_state = IntVar(windowMain, 0)
-thumbwrite_format_data = StringVar(windowMain, "webm")
+thumbwrite_format_data = StringVar(windowMain, "webp")
 thumbembed_state = IntVar(windowMain, 0)
 audio_state = IntVar(windowMain, 0)
 
@@ -278,10 +401,15 @@ subtitle_state = IntVar(windowMain, 0)
 subtitle_embed_state = IntVar(windowMain, 0)
 allformats_state = IntVar(windowMain, 0)
 term_state = IntVar(windowMain, 0)
+monitor_mode_state = IntVar(windowMain, 0)
+mm_year_data = StringVar(windowMain, "")
+mm_month_data = StringVar(windowMain, "")
+mm_day_data = StringVar(windowMain, "")
+
+stopMonitoring = 0
 
 
-
-mediaSource = Entry(windowMain, width = 60, textvariable = url_state)
+mediaSource = Entry(windowMain, width = 60, textvariable = url_data)
 mediaSource.grid(padx = 5, pady = 10, columnspan = 4)
 createToolTip(mediaSource, text = "Enter the URL of the Youtube video, Twitch\nstream, etc, that you want to download. You\ncan download individual videos or playlists.")
 
@@ -304,11 +432,11 @@ cookiesCheck = Checkbutton(text = "Use Cookies?", variable = cookie_state, comma
 cookiesCheck.grid(column = 0, row = 3, sticky = "w")
 createToolTip(cookiesCheck, text = "Import cookies from your browser of choice.\nMay be needed for paywalled content.")
 
-descriptionCheck = Checkbutton(text = "Download Description?", variable = description_state)
+descriptionCheck = Checkbutton(text = "Download\nDescription?", variable = description_state)
 descriptionCheck.grid(column = 0, row = 4, sticky = "w")
 createToolTip(descriptionCheck, text = "Write the video description to a seperate file.")
 
-commentsCheck = Checkbutton(text = "Download Comments?", variable = comments_state)
+commentsCheck = Checkbutton(text = "Download\nComments?", variable = comments_state)
 commentsCheck.grid(column = 0, row = 5, sticky = "w")
 createToolTip(commentsCheck, text = "Download stream comments to a seperate infojson file.")
 
@@ -316,7 +444,7 @@ waitCheck = Checkbutton(text = "Wait for Video?", variable = wait_state, command
 waitCheck.grid(column = 0, row = 6, sticky = "w")
 createToolTip(waitCheck, text = "If the video is scheduled but\nnot started yet, use this to retry\nplaying the video after the selected\nnumber of seconds.")
 
-writeThumbnail = Checkbutton(text = "Write Thumbnail?", variable = thumbwrite_state, command = thumbnailFormat)
+writeThumbnail = Checkbutton(text = "Write\nThumbnail?", variable = thumbwrite_state, command = thumbnailFormat)
 writeThumbnail.grid(column = 0, row = 7, sticky = "w")
 createToolTip(writeThumbnail, text = "Download the thumbnail as\na separate image file.") \
 
@@ -344,14 +472,22 @@ embedSubs = Checkbutton(text = "Embed?", variable = subtitle_embed_state)
 embedSubs.grid(column = 1, row = 10, sticky = "w")
 createToolTip(embedSubs, text = "Embed all available subtitle options for a video.")
 
-windowMain.rowconfigure(19, weight = 1)
+windowMain.rowconfigure(18, weight = 1)
 
-dlButton = Button(windowMain, text = "     Begin Download     ", fg = "dark green", background = "light gray", command = dlBegin)
-dlButton.grid(column = 0, row = 20, sticky = "w")
+dlButton = Button(windowMain, text = "     Begin Download     ", fg = "dark green", background = "light gray", command = errorCheck)
+dlButton.grid(column = 0, row = 20, sticky = "w", padx = 2)
 
 showTerm = Checkbutton(text = "Hide terminal?", variable = term_state)
 showTerm.grid(column = 1, row = 20, sticky = "w")
-createToolTip(showTerm, text = "The process typically opens a\nterminal to display progress.\nSelect this to prevent it.")
+createToolTip(showTerm, text = "The process typically opens a\nterminal to display progress.\nSelect this to prevent it.\nRecommended for monitor mode.")
+
+monitorModeCheck = Checkbutton(text = "Monitor\nMode", variable = monitor_mode_state, command = monitorTimeRange)
+monitorModeCheck.grid(column = 2, row = 20, sticky = "w")
+createToolTip(monitorModeCheck, text = "Monitor video source for new uploads. Used to monitor a\nsource of videos, not a specific video. For example, to monitor\na YouTube channel for new uploads in the 'videos' tab, enter\n'https://www.youtube.com/[channel name]/videos'\nIf you want to monitor streams, use the '/streams' link.\nThe same concept applies to other sites that yt-dlp supports.")
+
+helpButton = Button(text = "   Help   ", command = helpMenu)
+helpButton.grid(column = 4, row = 19, pady = 5, sticky = "e")
+createToolTip(helpButton, text = "Open the README page\non GitHub for detailed\ninfo about each option.")
 
 updateButton = Button(text = "Update?", command = checkGitHub)
 updateButton.grid(column = 4, row = 20, sticky = "e")
