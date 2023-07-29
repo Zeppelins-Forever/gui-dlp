@@ -26,7 +26,7 @@ Not thoroughly tested, however, so beware of bugs.
 
 --------------------------------------------------------------------
 
-<h1>Docs</h1>
+<h1>Documentation</h1>
 
 <details>
 <summary>Documentation on each feature coming soon.</summary>
