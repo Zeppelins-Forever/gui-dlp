@@ -371,7 +371,7 @@ def windowIcon(windowName):
 
 
 windowMain = Tk()
-windowMain.title("GUI-DLP v1.0.4")
+windowMain.title("GUI-DLP v1.1.0")
 windowMain.geometry("510x500")
 windowMain.resizable(False, False)
 windowIcon(windowMain)
