@@ -21,10 +21,15 @@ It runs in both Windows and Linux (macOS as of yet untested).
 For Linux users, you may have to install "Tk" (Tkinter module for Python)
 before running the python3 script. A couple of features do not work
 exactly as intended in Linux (terminal window not showing with download
-progress), but core functionality still operates smoothly.
+progress), but core functionality still seems to operate smoothly.
+Not thoroughly tested, however, so beware of bugs.
 
 --------------------------------------------------------------------
 
-This is by no means "clean" code, and I am by no means an expert, 
-so don't expect this to be highly optimized.
-To quote some guy, "I have no idea what I'm doing." 
+<h1>Docs</h1>
+
+<details>
+<summary>Documentation on each feature coming soon.</summary>
+<br>
+Hold your horses.
+</details>
