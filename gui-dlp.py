@@ -1,4 +1,4 @@
-import os, sys, subprocess, webbrowser, time, threading, base64
+import os, sys, subprocess, signal, webbrowser, time, threading, base64
 from tkinter import *
 from tkinter import filedialog, messagebox
 
@@ -116,6 +116,26 @@ def thumbnailFormat():
         createToolTip(ThumbFormatOptions, text = "Select format to download thumbnail as.")
     else:
         ThumbFormatOptions.grid_forget()
+
+def resolutionBoxAppear():
+    global ResolutionBoxOptions
+    OPTIONS = ["2160p", "1440p", "1080p", "720p", "480p", "360p", "240p", "144p"]
+    if other_resolution_state.get():
+        ResolutionBoxOptions = OptionMenu(windowMain, other_resolution_data, *OPTIONS)
+        ResolutionBoxOptions.grid(column = 2, row = 11)
+        createToolTip(ResolutionBoxOptions, text = "Not all resolutions are supported on every video.")
+    else:
+        ResolutionBoxOptions.grid_forget()
+
+def encodingBoxAppear():
+    global encodingBoxOptions
+    OPTIONS = ["avi", "flv", "gif", "mkv", "mov", "mp4", "webm", "aac", "aiff", "alac", "flac", "m4a", "mka", "mp3", "ogg", "opus", "vorbis", "wav"]
+    if other_encoding_state.get():
+        encodingBoxOptions = OptionMenu(windowMain, other_encoding_data, *OPTIONS)
+        encodingBoxOptions.grid(column = 1, row = 12)
+        createToolTip(encodingBoxOptions, text = "Some other options may not work properly\ndepending on the file format chosen.")
+    else:
+        encodingBoxOptions.grid_forget()
 
 def userListAppear():
     global ulLocate, userFileButton
@@ -310,6 +330,18 @@ def dlBegin(monitor_mode):
         cmd_list.append("-f")
         cmd_list.append("all")
 
+    if other_resolution_state.get():
+        cmd_list.append("-S")
+        resolution_final = "res:" + other_resolution_data.get()
+        cmd_list.append(resolution_final.replace("p" ,""))
+    
+    if other_encoding_state.get():
+        cmd_list.append("--remux")
+        cmd_list.append(other_encoding_data.get())
+        cmd_list.append("--merge")
+        cmd_list.append(other_encoding_data.get())
+
+    print("\n", cmd_list, "\n")
     if monitor_mode_state.get():
         global stopMonitorButton
         dlButton.grid_forget()
@@ -329,8 +361,8 @@ def dlBegin(monitor_mode):
         shell_used = False
 
 def monitorThread(cmd_commands):
-    global dlButton, stopMonitoring
-    print("\n", cmd_commands, "\n")
+    global dlButton, stopMonitoring, mon_running
+    mon_running = True
     if term_state.get():
         downloading = subprocess.Popen(cmd_list, shell=True)
     else:
@@ -338,23 +370,37 @@ def monitorThread(cmd_commands):
     while not stopMonitoring:
         if downloading.poll() == None:
             print("Process is running!")
-            if stopMonitoring == 0:
-                time.sleep(3)
+            print("Process ID:", downloading.pid)
+            time.sleep(1)
             continue
         else:
             print("Restarting process.")
             if term_state.get():
                 downloading = subprocess.Popen(cmd_list, shell=True)
+                print("Process ID:", downloading.pid)
             else:
                 downloading = subprocess.Popen(cmd_list, shell=False)
+                print("Process ID:", downloading.pid)
     print("Stopped Monitoring")
+    child_pid = downloading.pid
+    print("Killing process ID:", downloading.pid)
+    os.kill(child_pid, signal.SIGTERM)
     downloading.kill()
     stopMonitorButton.destroy()
+    mon_running = False
     dlButton = Button(windowMain, text = "     Begin Download     ", fg = "dark green", background = "light gray", command = errorCheck)
     dlButton.grid(column = 0, row = 20, sticky = "w")
     stopMonitoring = 0
     return
+"""
+def on_closing():
 
+    if mon_running:
+        if messagebox.askokcancel("Quit", "Monitor is still running.\nDo you want to end monitor mode and quit?"):
+            windowMain.destroy()
+    else:
+        windowMain.destroy()
+"""
 def windowIcon(windowName):
     icon = """ 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
     """
@@ -371,7 +417,7 @@ def windowIcon(windowName):
 
 
 windowMain = Tk()
-windowMain.title("GUI-DLP v1.1.0")
+windowMain.title("GUI-DLP v1.2.0")
 windowMain.geometry("510x500")
 windowMain.resizable(False, False)
 windowIcon(windowMain)
@@ -392,6 +438,10 @@ wait_num = IntVar(windowMain, 15)
 thumbwrite_state = IntVar(windowMain, 0)
 thumbwrite_format_data = StringVar(windowMain, "webp")
 thumbembed_state = IntVar(windowMain, 0)
+other_resolution_state = IntVar(windowMain, 0)
+other_resolution_data = StringVar(windowMain, "1080p")
+other_encoding_state = IntVar(windowMain, 0)
+other_encoding_data = StringVar(windowMain, "mkv")
 audio_state = IntVar(windowMain, 0)
 
 usrlist_state = IntVar(windowMain, 0)
@@ -400,6 +450,9 @@ usrlist_data = StringVar(windowMain, "")
 subtitle_state = IntVar(windowMain, 0)
 subtitle_embed_state = IntVar(windowMain, 0)
 allformats_state = IntVar(windowMain, 0)
+
+################################################ Window Starts Here ################################################
+
 term_state = IntVar(windowMain, 0)
 monitor_mode_state = IntVar(windowMain, 0)
 mm_year_data = StringVar(windowMain, "")
@@ -426,7 +479,7 @@ createToolTip(fileButton, text = "Enter the absolute path\nto where you want the
 
 customNameCheck = Checkbutton(text = "Custom Name?", variable = name_state, command = nameboxAppear)
 customNameCheck.grid(column = 0, row = 2, sticky = "w")
-createToolTip(customNameCheck, "Set a custom name for the downloaded file.\nDO NOT INCLUDE FILE EXTENSION!\n If you are downloading a playlist, check 'Include URL?',\notherwise the videos will overwrite themselves.")
+createToolTip(customNameCheck, "Set a custom name for the downloaded file.\nDO NOT INCLUDE FILE EXTENSION!\nIf you are downloading a playlist, check 'Include URL?',\notherwise the videos will overwrite themselves.")
 
 cookiesCheck = Checkbutton(text = "Use Cookies?", variable = cookie_state, command = browserAppear)
 cookiesCheck.grid(column = 0, row = 3, sticky = "w")
@@ -468,6 +521,14 @@ downloadAllFormats = Checkbutton(text = "All Formats?", variable = allformats_st
 downloadAllFormats.grid(column = 0, row = 11, sticky = "w")
 createToolTip(downloadAllFormats, text = "Download all file types available.")
 
+otherResolution = Checkbutton(text = "Non-highest\nresolution?", variable = other_resolution_state, command = resolutionBoxAppear)
+otherResolution.grid(column = 1, row = 11, sticky = "w")
+createToolTip(otherResolution, text = "Choose a resolution to download the video\nat that is not the default highest.")
+
+otherEncoding = Checkbutton(text = "Non-default\nencoding?", variable = other_encoding_state, command = encodingBoxAppear)
+otherEncoding.grid(column = 0, row = 12, sticky = "w")
+createToolTip(otherEncoding, text = "Choose an format to encode the video\nas instead of using the default.")
+
 embedSubs = Checkbutton(text = "Embed?", variable = subtitle_embed_state)
 embedSubs.grid(column = 1, row = 10, sticky = "w")
 createToolTip(embedSubs, text = "Embed all available subtitle options for a video.")
@@ -479,7 +540,7 @@ dlButton.grid(column = 0, row = 20, sticky = "w", padx = 2)
 
 showTerm = Checkbutton(text = "Hide terminal?", variable = term_state)
 showTerm.grid(column = 1, row = 20, sticky = "w")
-createToolTip(showTerm, text = "The process typically opens a\nterminal to display progress.\nSelect this to prevent it.\nRecommended for monitor mode.")
+createToolTip(showTerm, text = "The process typically opens a terminal to display progress. Select this to prevent it.\nHiding is not recommended for monitor mode, as it allows you to kill the process in the\nterminal window immediatly, if desired. Also not recommended for non-default encoding\nand non-highest resolution, as you will not see if download failures take place.")
 
 monitorModeCheck = Checkbutton(text = "Monitor\nMode", variable = monitor_mode_state, command = monitorTimeRange)
 monitorModeCheck.grid(column = 2, row = 20, sticky = "w")
@@ -493,4 +554,5 @@ updateButton = Button(text = "Update?", command = checkGitHub)
 updateButton.grid(column = 4, row = 20, sticky = "e")
 createToolTip(updateButton, text = "Open the GitHub Releases\npage to manually check\nfor updates.")
 
+#windowMain.protocol("WM_DELETE_WINDOW", on_closing)  ###### For future updates
 windowMain.mainloop()
