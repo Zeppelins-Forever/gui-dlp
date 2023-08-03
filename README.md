@@ -17,12 +17,12 @@ convert this into a Windows executable, I would recommend the tool
 auto-py-to-exe (https://pypi.org/project/auto-py-to-exe/), or just
 use one of my releases.
 
-It runs in both Windows and Linux (macOS as of yet untested).
-For Linux users, you may have to install "Tk" (Tkinter module for Python)
-before running the python3 script. A couple of features do not work
-exactly as intended in Linux (terminal window not showing with download
-progress), but core functionality still seems to operate smoothly.
-Not thoroughly tested, however, so beware of bugs.
+It is designed with Windows in mind (Linux and macOS not thoroughly 
+tested). For experimental Linux users, you may have to install "Tk"
+(Tkinter module for Python) before running the python3 script. A 
+couple of features may not work exactly as intended in Linux (terminal
+window not showing with download progress), but core functionality may
+still be intact. Not thoroughly tested, however, so beware of bugs.
 
 --------------------------------------------------------------------
 
