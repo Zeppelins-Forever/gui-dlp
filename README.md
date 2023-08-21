@@ -19,10 +19,11 @@ use one of my releases.
 
 It is designed with Windows in mind (Linux and macOS not thoroughly 
 tested). For experimental Linux users, you may have to install "Tk"
-(Tkinter module for Python) before running the python3 script. A 
-couple of features may not work exactly as intended in Linux (terminal
-window not showing with download progress), but core functionality may
-still be intact. Not thoroughly tested, however, so beware of bugs.
+(Tkinter module for Python) before running the python3 script, and 
+pyperclip for additional functionality. A couple of features may not 
+work exactly as intended in Linux (terminal window not showing with 
+download progress), but core functionality may still be intact. Not 
+thoroughly tested, however, so beware of bugs.
 
 --------------------------------------------------------------------
 
