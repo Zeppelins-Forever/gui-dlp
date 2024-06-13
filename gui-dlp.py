@@ -275,6 +275,11 @@ def monitorTimeRange():
 
 def checkGitHub():  
     webbrowser.open("https://github.com/Zeppelins-Forever/gui-dlp/releases", new = 0, autoraise = True)
+    webbrowser.open("https://github.com/Kethsar/ytarchive/releases", new = 0, autoraise = True)
+    update_list = ["yt-dlp"]
+    update_list = update_list.append("-U")
+    updateMonitorThread = threading.Thread(target = updateThread, args = [update_list]) #launch new thread so download monitoring doesnt interfere with window processing.
+    updateMonitorThread.start()
 
 def helpMenu():
     if os.path.isfile("help/GUI-DLP-help.html"):
@@ -709,6 +714,12 @@ def tab2monitorThread(cmd_commands):
     dlButton.place(x = 5, y = 500)
     return
 
+###### Update Thread
+def updateThread(cmd_commands):
+    downloaderUpdate = subprocess.Popen('yt-dlp.exe -U', shell=True)
+    return
+
+
 ################### For future updates
 """ 
 def on_closing():
@@ -743,7 +754,7 @@ def windowIcon(windowName):
 
 
 windowMain = Tk()
-windowMain.title("GUI-DLP v2.0.0")
+windowMain.title("GUI-DLP v2.0.1")
 windowMain.geometry("510x535")
 windowMain.resizable(False, False)
 windowIcon(windowMain)
@@ -842,7 +853,7 @@ createToolTip(helpButton, text = "Open the README page\non GitHub for detailed\n
 
 updateButton = Button(windowMain, text = "Update?", command = checkGitHub)
 updateButton.place(x = 450, y = 500)
-createToolTip(updateButton, text = "Open the GitHub Releases\npage to manually check\nfor updates.")
+createToolTip(updateButton, text = "Automatically updates yt-dlp, if it's detected. Opens the\nGitHub Releases page to manually check for updates of\nboth ytarchive and GUI-DLP. FFMPEG will also have to\nupdate manualy.")
 
 customNameCheck = Checkbutton(windowMain, text = "Custom Name?", variable = name_state, command = nameboxAppear)
 customNameCheck.place(x = 1, y = 83)
