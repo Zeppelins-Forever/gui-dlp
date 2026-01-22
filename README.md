@@ -1,5 +1,5 @@
 # gui-dlp
-
+### Note: In it's current state, this does not work. I will need to embed Deno, force usage of yt-dlp Nightly, run auto-updates before launching, and replace ytarchive. The YouTube downloading landscape has changed a lot...
 This is a GUI front-end application for yt-dlp and ytarchive. You must already have yt-dlp and ytarchive (and its dependencies, such as ffmepg) installed and in the system PATH Environment for the Core installation. (Settings > System > About > Advanced System Settings > Advanced tab > Environment Variables > Double-click "Path" under System Variables > make a new path to the folder where you placed yt-dlp (and do the same for ffmpeg, if you haven't already after downloading yt-dlp)).
 
 This presently does not have all of the features available in the terminal, so I wouldn't recommend using it if you need more technically specific options.
